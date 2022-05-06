@@ -14,7 +14,7 @@ VerilogFormat Extension is a tool for formatter verilog files. This extension us
 
 1. File > Preferences > Settings > Verilog Format > Path
 
-    Path of executable verilof-format.
+    Path of executable verilog-format.
     
     * LINUX: `<PATH>/verilog-format`
     * WIN:   `<PATH>/verilog-format.exe`
