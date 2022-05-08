@@ -11,19 +11,34 @@ import * as path from 'path';
 export function activate(context: vscode.ExtensionContext) {
 
 	vscode.languages.registerDocumentFormattingEditProvider({ scheme: "file", language: "verilog" }, {
-		provideDocumentFormattingEdits
+		provideDocumentFormattingEdits: formatWithCharset
 	});
-
-	context.subscriptions.push(
-		vscode.commands.registerCommand("verilog.format", provideDocumentFormattingEdits)
-	);
 
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() { }
 
-function provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[] {
+async function formatWithCharset(document: vscode.TextDocument): Promise<vscode.TextEdit[]> {
+	var result = await vscode.window.showQuickPick(
+		[
+			"GBK",
+			"UTF-8"
+		],
+		{
+			canPickMany: false,
+			ignoreFocusOut: true,
+			matchOnDescription: true,
+			matchOnDetail: true,
+			placeHolder: "Choose the charset to format file"
+		}
+	).then(value => {
+		return formatVerilog(document, value);
+	});
+	return result;
+}
+
+function formatVerilog(document: vscode.TextDocument, charset = "UTF-8"): vscode.TextEdit[] {
 	let result: vscode.TextEdit[] = [];
 	const verilogformat = <string>vscode.workspace.getConfiguration().get('verilog-format.path');
 	const globalSettings = <string>vscode.workspace.getConfiguration().get('verilog-format.settings');
@@ -52,7 +67,6 @@ function provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.T
 		console.log('Global settings found');
 		settingFile = globalSettings;
 		hasSettingsFile = true;
-	} else {
 	}
 
 	if (hasSettingsFile) {
@@ -60,10 +74,13 @@ function provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.T
 		args.push(settingFile);
 	}
 
+	args.push("-c");
+	args.push(charset);
+
 	try {
 		console.log(`Executing command: "${verilogformat} ${args.join(" ")}"`);
 		var execResult = child.spawnSync(verilogformat, args, {});
-		var returnNumber = execResult.status
+		var returnNumber = execResult.status;
 		if (returnNumber === 0) {
 			vscode.window.showInformationMessage("Format Success!");
 		} else {
@@ -83,7 +100,7 @@ function createTempFileOfDocument(document: vscode.TextDocument): string {
 	const content = document.getText();
 	const tempfile = temp.openSync();
 	if (tempfile === undefined) {
-		throw "Unable to create temporary file";
+		throw new Error("Unable to create temporary file");
 	}
 	fs.writeSync(tempfile.fd, content);
 	fs.closeSync(tempfile.fd);

@@ -19,20 +19,6 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
-		"commands": [
-			{
-				"command": "verilog.format",
-				"title": "Format verilog"
-			}
-		],
-		"menus": {
-			"explorer/context": [
-				{
-					"command": "verilog.format",
-					"group": "group1"
-				}
-			]
-		},
 		"configuration": {
 			"title": "Verilog Format",
 			"properties": {
